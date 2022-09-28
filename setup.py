@@ -13,13 +13,16 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='elwin',
+    maintainer='Matthew Elwin',
     maintainer_email='elwin@northwestern.edu',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Experiments in python asynchronous services',
+    license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'delay_server = async_experiments.delay_server:delay_entry',
+            'deadlock = async_experiments.async_client:deadlock_entry',
+            'await = async_experiments.async_client:await_entry'
         ],
     },
 )

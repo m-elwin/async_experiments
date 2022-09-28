@@ -12,10 +12,12 @@ class DelayServer(Node):
 
     def __init__(self):
         super().__init__("delay_server")
-        self._delay_srv = self.create_server(Empty, "delay", self.delay_callback)
+        self._delay_srv = self.create_service(Empty, "delay", self.delay_callback)
 
-    def delay_callback(_, resp):
+    async def delay_callback(self,_, resp):
+        self.get_logger().info("Begin Delay")
         sleep(3)
+        self.get_logger().info("End Delay")
         return resp
 
 
