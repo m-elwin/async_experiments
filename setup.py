@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'delay_server = async_experiments.delay_server:delay_entry',
             'deadlock = async_experiments.async_client:deadlock_entry',
-            'await = async_experiments.async_client:await_entry'
+            'await = async_experiments.async_client:await_entry',
+            'yield = async_experiments.async_client:yield_entry'
         ],
     },
 )
