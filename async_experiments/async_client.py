@@ -1,3 +1,4 @@
+""" Different examples for how to handle asynchronous calls """
 import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Empty
@@ -5,7 +6,7 @@ from enum import Enum, auto
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 class DeadlockClient(Node):
-    """ This will purposely deadlock """
+    """ This Node will purposely deadlock """
     def __init__(self):
         super().__init__("async_client")
         self._client = self.create_client(Empty, "delay")
@@ -23,6 +24,7 @@ class DeadlockClient(Node):
         self.get_logger().info("Timer Done!")
 
 class AwaitClient(Node):
+    """ This node uses await and callback groups to properly wait for the service to end """
     def __init__(self):
         super().__init__("async_client")
         self.cbgroup = ReentrantCallbackGroup()
@@ -34,10 +36,29 @@ class AwaitClient(Node):
         await self._client.call_async(Empty.Request())
         self.get_logger().info("Timer Done!")
 
+
+class FutureClient(Node):
+    """ Check on the future in each timer iteration """
+    def __init__(self):
+        super().__init__("future_client")
+        self._client = self.create_client(Empty, "delay")
+        self._tmr = self.create_timer(1.0, self.timer_callback)
+        self._future = None
+        self.state = State.DELAY
+
+    def timer_callback(self):
+        if not self._future:
+            self.get_logger().info("Timer, calling delay 3s")
+            self._future = self._client.call_async(Empty.Request())
+        if self._future.done():
+            self.get_logger().info("Timer Done!")
+            self._future = None
+        else:
+                self.get_logger().info("Doing other stuff!")
+
 class State(Enum):
     DELAY = auto(),
     DONE = auto()
-
 class YieldClient(Node):
     def __init__(self):
         super().__init__("yield_client")
@@ -84,6 +105,11 @@ def await_entry(args=None):
     rclpy.spin(node)
     rclpy.shutdown()
 
+def future_entry(args=None):
+    rclpy.init(args=args)
+    node = FutureClient()
+    rclpy.spin(node)
+    rclpy.shutdown()
 
 def yield_entry(args=None):
     rclpy.init(args=args)
