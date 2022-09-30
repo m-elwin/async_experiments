@@ -1,0 +1,12 @@
+#+TITLE: ROS 2 Asynchronous Service Client
+#+AUTHOR: Matthew Elwin
+
+* Overview
+Provides examples for calling ROS 2 services asynchronously from python.
+
+** Nodes
+- =delay_server=: Offers a =/delay (std_srvs/srv/Empty)= service that delays for 3 seconds before returning
+- =deadlock=: This node calls =/delay= improperly and deadlocks
+- =await=: This node uses python [[https://docs.python.org/3/library/asyncio.html][asyncio]] to wait for the service to complete
+- =future=: This node directly polls a future object after calling the service
+- =yield=: This node uses python generators to help sequence a pattern
