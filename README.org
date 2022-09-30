@@ -3,6 +3,7 @@
 
 * Overview
 Provides examples for calling ROS 2 services asynchronously from python.
+For now the repository is focused on single-threaded python nodes.
 
 ** Nodes
 - =delay_server=: Offers a =/delay (std_srvs/srv/Empty)= service that delays for 3 seconds before returning

@@ -1,3 +1,4 @@
+""" Creates a service server that can be used to test asynchronous calls """
 import rclpy
 from rclpy.node import Node
 from time import sleep
@@ -7,7 +8,7 @@ from std_srvs.srv import Empty
 class DelayServer(Node):
     """
     Services:
-      /delay3 (std_srvs/Empty): delay for 3 seconds before returning
+      delay (std_srvs/Empty): delay for 3 seconds before returning
     """
 
     def __init__(self):
