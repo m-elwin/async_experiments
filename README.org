@@ -11,3 +11,7 @@ For now the repository is focused on single-threaded python nodes.
 - =await=: This node uses python [[https://docs.python.org/3/library/asyncio.html][asyncio]] to wait for the service to complete
 - =future=: This node directly polls a future object after calling the service
 - =yield=: This node uses python generators to help sequence a pattern
+
+** Usage
+1. =ros2 run async_experiments delay_server= to run the delay server
+2. =ros2 run async_experiments <node_here>= to run the specific examples

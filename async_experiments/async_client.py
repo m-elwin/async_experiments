@@ -29,9 +29,10 @@ class AwaitClient(Node):
     """ This node uses await and callback groups to properly wait for the service to end """
     def __init__(self):
         super().__init__("async_client")
-        self.cbgroup = MutuallyExclusiveCallbackGroup()
+        self.cbgroup = ReentrantCallbackGroup()
         # Add client and timer to a ReentrantCallback group so timer and the client future can execute concurrently
-        self._client = self.create_client(Empty, "delay")
+        # This code would also work if the client and timer were in different MutuallyExclusiveCallback groups
+        self._client = self.create_client(Empty, "delay", callback_group = self.cbgroup)
         self._tmr = self.create_timer(5.0, self.timer_callback, callback_group = self.cbgroup)
 
     async def timer_callback(self):
