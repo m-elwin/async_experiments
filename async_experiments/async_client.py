@@ -136,23 +136,27 @@ class YieldClient(Node):
 def deadlock_entry(args=None):
     rclpy.init(args=args)
     node = DeadlockClient()
+    node.get_logger().info("Deadlock Experiment!")
     rclpy.spin(node)
     rclpy.shutdown()
 
 def await_entry(args=None):
     rclpy.init(args=args)
     node = AwaitClient()
+    node.get_logger().info("Await Experiment!")
     rclpy.spin(node)
     rclpy.shutdown()
 
 def future_entry(args=None):
     rclpy.init(args=args)
     node = FutureClient()
+    node.get_logger().info("Future Experiment!")
     rclpy.spin(node)
     rclpy.shutdown()
 
 def yield_entry(args=None):
     rclpy.init(args=args)
     node = YieldClient()
+    node.get_logger().info("Yield Experiment!")
     rclpy.spin(node)
     rclpy.shutdown()

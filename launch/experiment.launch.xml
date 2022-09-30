@@ -1,0 +1,5 @@
+<launch>
+  <arg name="experiment" default="await" description="Which test to run: (deadlock|await|future|yield)" />
+  <node pkg="async_experiments" exec="delay_server" output="screen"/>
+  <node pkg="async_experiments" exec="$(var experiment)" output="screen"/>
+</launch>

@@ -12,6 +12,10 @@ For now the repository is focused on single-threaded python nodes.
 - =future=: This node directly polls a future object after calling the service
 - =yield=: This node uses python generators to help sequence a pattern
 
-** Usage
-1. =ros2 run async_experiments delay_server= to run the delay server
-2. =ros2 run async_experiments <node_here>= to run the specific examples
+* Usage
+- It is often useful to run the server and the experiment node in separate windows, to see how they interact:
+  #+BEGIN_SRC bash
+  ros2 run async_experiments delay_server # run the delay server
+  ros2 run async_experiments <deadlock|await|future|yield> # run the node of your choice
+  #+END_SRC
+- A launchfile can also be used: ~ros2 launch async_experiments experiment.launch.xml experiment:=<deadlock|await|future|yield>~
