@@ -21,4 +21,4 @@ For now the repository is focused on single-threaded python nodes.
 - A launchfile can also be used: ~ros2 launch async_experiments experiment.launch.xml experiment:=<deadlock|await|future|yield>~
 
 * Resources
-See [[https://nu-msr.github.io/ros_notes/ros2/spin.hmtl#walkthrough]]
+See [[https://nu-msr.github.io/ros_notes/ros2/spin.htmml#walkthrough]]
