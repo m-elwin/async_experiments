@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Empty
 from enum import Enum, auto
-from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 
 class DeadlockClient(Node):
     """ This Node will purposely deadlock (which is bad!) """
@@ -29,11 +29,11 @@ class AwaitClient(Node):
     """ This node uses await and callback groups to properly wait for the service to end """
     def __init__(self):
         super().__init__("async_client")
-        self.cbgroup = ReentrantCallbackGroup()
-        # Add client and timer to a ReentrantCallback group so timer and the client future can execute concurrently
-        # This code would also work if the client and timer were in different MutuallyExclusiveCallback groups
+        self.cbgroup = MutuallyExclusiveCallbackGroup()
+        # Service clients go in the MutuallyExclusive callback group
         self._client = self.create_client(Empty, "delay", callback_group = self.cbgroup)
-        self._tmr = self.create_timer(5.0, self.timer_callback, callback_group = self.cbgroup)
+        # Other callbacks remain in the default callback group
+        self._tmr = self.create_timer(5.0, self.timer_callback)
 
     async def timer_callback(self):
         """ We have made the timer callback asynchronous, so it can give up execution time to other tasks """
