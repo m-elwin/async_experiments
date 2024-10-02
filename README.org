@@ -10,15 +10,14 @@ For now the repository is focused on single-threaded python nodes.
 - =deadlock=: This node calls =/delay= improperly and deadlocks
 - =await=: This node uses python [[https://docs.python.org/3/library/asyncio.html][asyncio]] to wait for the service to complete
 - =future=: This node directly polls a future object after calling the service
-- =yield=: This node uses python generators to help sequence a pattern
 
 * Usage
 - It is often useful to run the server and the experiment node in separate windows, to see how they interact:
   #+BEGIN_SRC bash
   ros2 run async_experiments delay_server # run the delay server
-  ros2 run async_experiments <deadlock|await|future|yield> # run the node of your choice
+  ros2 run async_experiments <deadlock|await|future> # run the node of your choice
   #+END_SRC
-- A launchfile can also be used: ~ros2 launch async_experiments experiment.launch.xml experiment:=<deadlock|await|future|yield>~
+- A launchfile can also be used: ~ros2 launch async_experiments experiment.launch.xml experiment:=<deadlock|await|future>~
 
-* Resources
-See [[https://nu-msr.github.io/ros_notes/ros2/spin.htmml#walkthrough]]
+* Code Walkthrough
+See [[https://nu-msr.github.io/ros_notes/ros2/spin.html#walkthrough]]

@@ -45,93 +45,44 @@ class AwaitClient(Node):
         self.get_logger().info("Timer Done!")
 
 
+class State(Enum):
+    """States for tracking the completion of the service call."""
+
+    DELAY = auto(),
+    """The node should call the delay service."""
+
+    WAITING = auto(),
+    """The node is waiting for the delay service to return."""
+
+    DONE = auto()
+    """The delay service has returned."""
 
 class FutureClient(Node):
-    """ Check on the future in each timer iteration """
+    """Check on the future in each timer iteration."""
     def __init__(self):
         super().__init__("future_client")
-        self._client = self.create_client(Empty, "delay")
+        self._client = self.create_client(Empty, 'delay')
         self._tmr = self.create_timer(1.0, self.timer_callback)
         self._future = None
+        self._state = State.DELAY
 
     def timer_callback(self):
-        if not self._future: # A call is not pending
-            self.get_logger().info("Timer, calling delay 3s")
+        """Manage the state machine for the node."""
+        if self._state == State.DELAY:
+            self.get_logger().info('Initiating a 3s delay.')
             self._future = self._client.call_async(Empty.Request())
-
-        if self._future.done(): # a call just completed
-            self.get_logger().info("Timer Done!")
-            self._future = None
+            self._state = State.WAITING
+        elif self._state == State.WAITING:
+            self.get_logger().info('Waiting. A real node could be doing useful work right now.')
+            if self._future.done():
+                self._state = State.DONE
+        elif self._state == State.DONE:
+            self.get_logger().info('We have received the delay response.')
+            self._state = State.DELAY
         else:
-                self.get_logger().info("Doing other stuff!")
+            # Always raise an error if the code somehow gets into an invalid state.
+            raise RuntimeError("Invalid State.")
 
-class State(Enum):
-    """ States for tracking the completion of the service call """
-    DELAY = auto(),
-    DONE = auto()
-
-class YieldClient(Node):
-    def __init__(self):
-        super().__init__("yield_client")
-        self._client = self.create_client(Empty, "delay")
-        self._tmr = self.create_timer(1.0, self.timer_callback)
-        self._delay_generator = None
-        self.state = State.DONE
-
-    def _delay(self):
-        """ Makes an asynchronous delay call, and repeatedly yields until the future is done """
-        # This pattern can be followed for any service client
-        # Essentially, this function makes a request, then checks the future
-        # If the future is not done(), it yields
-        # yielding causes _delay() to return an iterator.
-        # calling next() on the iterator will resume _delay() from the point
-        # where it last called yield
-        future = self._client.call_async(Empty.Request())
-        while not future.done():
-            yield
-
-    def _double_delay(self):
-        """ Make two delay calls in a row """
-        # This pattern enables calling multiple services in a row and yielding until they are each complete
-        # yield from will cause this function to yield if the called function yields.
-        # when calling next() on the iterator, execution continues from the last yield call
-        yield from self._delay()
-        yield from self._delay()
-
-    def double_delay(self):
-        """ On the first call, call the delay service twice.
-            On subsequent calls: if service responses have not yet been received, return False
-            If service responses have been received: return True and reset.
-
-            Return:
-              True if all services have received responses, False otherwise
-        """
-        # This function follows a pattern that enables a user to continuously call this function and check
-        # it's return value. The function will continue advancing it's work little by little on each
-        # subsequent call, until the work is finished
-        try:
-            if not self._delay_generator:
-                # we have not yet made a call to delay so call it
-                self._delay_generator = self._double_delay()
-            else:
-                # a call is pending, check if it's done
-                next(self._delay_generator)
-            return False
-        except StopIteration:
-            # Delay has completed so reset
-            self._delay_generator = None
-            return True
-
-    def timer_callback(self):
-        if self.state == State.DONE:
-            self.get_logger().info("Timer, calling delay twice, 6s")
-            self.state = State.DELAY
-        elif self.state == State.DELAY:
-            if self.double_delay():
-                self.get_logger().info("Timer Done!")
-                self.state = State.DONE
-            else:
-                self.get_logger().info("Doing other stuff!")
 
 def deadlock_entry(args=None):
     rclpy.init(args=args)
@@ -151,12 +102,5 @@ def future_entry(args=None):
     rclpy.init(args=args)
     node = FutureClient()
     node.get_logger().info("Future Experiment!")
-    rclpy.spin(node)
-    rclpy.shutdown()
-
-def yield_entry(args=None):
-    rclpy.init(args=args)
-    node = YieldClient()
-    node.get_logger().info("Yield Experiment!")
     rclpy.spin(node)
     rclpy.shutdown()
