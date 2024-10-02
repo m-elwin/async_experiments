@@ -1,48 +1,56 @@
-""" Different examples for how to handle (both properly and improperly) asynchronous calls """
+"""Different examples for how to handle (both properly and improperly) asynchronous calls."""
+
+from enum import auto, Enum
+
 import rclpy
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.node import Node
 from std_srvs.srv import Empty
-from enum import Enum, auto
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+
 
 class DeadlockClient(Node):
-    """ This Node will purposely deadlock (which is bad!) """
+    """This Node will purposely deadlock (which is bad!)."""
+
     def __init__(self):
-        super().__init__("async_client")
-        self._client = self.create_client(Empty, "delay")
+        super().__init__('deadlock_client')
+        self._client = self.create_client(Empty, 'delay')
         self._tmr = self.create_timer(5.0, self.timer_callback)
 
     def timer_callback(self):
-        self.get_logger().info("Timer, calling delay 3s")
+        self.get_logger().info('Timer, calling delay 3s')
         future = self._client.call_async(Empty.Request())
-        self.get_logger().info("Call finished, waiting")
+        self.get_logger().info('Call finished, waiting')
 
         # Because this call is in the timer_callback, we are not spinning
         # Therefore the future can never be set to the done state
         while not future.done():
-            self.get_logger().info("Not Done", once=True)
-            # rclpy.spin_once(self) # try it! won't help because we are already in a MutallyExclusive callback
+            self.get_logger().info('Not Done', once=True)
+            # Spinning won't help because this is in MutallyExclusiveCallbackGroup
+            # rclpy.spin_once(self) # try it!
+
         # We will never get here due to the deadlock
-        self.get_logger().info("Timer Done!")
+        self.get_logger().info('Timer Done!')
+
 
 class AwaitClient(Node):
-    """ This node uses await and callback groups to properly wait for the service to end """
+    """This node uses await and callback groups to properly wait for the service to end."""
+
     def __init__(self):
-        super().__init__("async_client")
+        super().__init__('await_client')
         self.cbgroup = MutuallyExclusiveCallbackGroup()
         # Service clients go in the MutuallyExclusive callback group
-        self._client = self.create_client(Empty, "delay", callback_group = self.cbgroup)
+        self._client = self.create_client(Empty, 'delay', callback_group=self.cbgroup)
         # Other callbacks remain in the default callback group
         self._tmr = self.create_timer(5.0, self.timer_callback)
 
     async def timer_callback(self):
-        """ We have made the timer callback asynchronous, so it can give up execution time to other tasks """
-        self.get_logger().info("Timer, calling delay 3s")
-        # When we await the future, execution of timer_callback is suspended, allowing the main ROS spin loop to
-        # Keep spinning and update the timer.
+        """Timer callback can yield execution to other tasks because it is async."""
+        self.get_logger().info('Timer, calling delay 3s')
+        # When we await the future, execution of timer_callback is suspended,
+        # allowing the main ROS spin loop to keep spinning and update the timer.
         # Timer and the client must be in a ReentrantCallback group
         await self._client.call_async(Empty.Request())
-        self.get_logger().info("Timer Done!")
+        self.get_logger().info('Timer Done!')
 
 
 class State(Enum):
@@ -57,10 +65,12 @@ class State(Enum):
     DONE = auto()
     """The delay service has returned."""
 
+
 class FutureClient(Node):
     """Check on the future in each timer iteration."""
+
     def __init__(self):
-        super().__init__("future_client")
+        super().__init__('future_client')
         self._client = self.create_client(Empty, 'delay')
         self._tmr = self.create_timer(1.0, self.timer_callback)
         self._future = None
@@ -81,26 +91,31 @@ class FutureClient(Node):
             self._state = State.DELAY
         else:
             # Always raise an error if the code somehow gets into an invalid state.
-            raise RuntimeError("Invalid State.")
+            raise RuntimeError('Invalid State.')
 
 
 def deadlock_entry(args=None):
+    """Entry point for the deadlock example."""
     rclpy.init(args=args)
     node = DeadlockClient()
-    node.get_logger().info("Deadlock Experiment!")
+    node.get_logger().info('Deadlock Experiment!')
     rclpy.spin(node)
     rclpy.shutdown()
+
 
 def await_entry(args=None):
+    """Entry point for the await example."""
     rclpy.init(args=args)
     node = AwaitClient()
-    node.get_logger().info("Await Experiment!")
+    node.get_logger().info('Await Experiment!')
     rclpy.spin(node)
     rclpy.shutdown()
 
+
 def future_entry(args=None):
+    """Entry point for the future example."""
     rclpy.init(args=args)
     node = FutureClient()
-    node.get_logger().info("Future Experiment!")
+    node.get_logger().info('Future Experiment!')
     rclpy.spin(node)
     rclpy.shutdown()
