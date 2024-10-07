@@ -19,5 +19,11 @@ For now the repository is focused on single-threaded python nodes.
   #+END_SRC
 - A launchfile can also be used: ~ros2 launch async_experiments experiment.launch.xml experiment:=<deadlock|await|future>~
 
+* Other
+1. =async_experiments/hand_async.py= outlines an experiment that can be done to test a hand-rolled async implementation example.
+   - The code expects a named pipe called =/tmp/fifo= to exist: make it with =mkfifo /tmp/fifo=
+   - Run the example with =python3 -m async_experiments.hand_async=
+   - Events can be sent by =echo "A" > /tmp/fifo= (for example). See =async_experiments/hand_async.py= for a detailed walkthrough.
+
 * Code Walkthrough
 See [[https://nu-msr.github.io/ros_notes/ros2/spin.html#walkthrough]]
