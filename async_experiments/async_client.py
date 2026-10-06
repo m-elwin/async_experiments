@@ -29,8 +29,7 @@ class DeadlockClient(Node):
         # Therefore the future can never be set to the done state
         while not future.done():
             self.get_logger().info('Not Done', once=True)
-            # Spinning won't help because this is in MutallyExclusiveCallbackGroup
-            # rclpy.spin_once(self) # try it!
+            # You can not spin from within another spin loop
 
         # We will never get here due to the deadlock
         self.get_logger().info('Timer Done!')
