@@ -3,6 +3,7 @@
 from time import sleep
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_srvs.srv import Empty
 
@@ -30,7 +31,9 @@ class DelayServer(Node):
 
 def delay_entry(args=None):
     """Entry point for the delay node."""
-    rclpy.init(args=args)
-    node = DelayServer()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        with rclpy.init(args=args):
+            node = DelayServer()
+            rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
