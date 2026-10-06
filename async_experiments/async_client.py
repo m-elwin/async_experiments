@@ -4,6 +4,7 @@ from enum import auto, Enum
 
 import rclpy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_srvs.srv import Empty
 
@@ -15,6 +16,9 @@ class DeadlockClient(Node):
         super().__init__('deadlock_client')
         self._client = self.create_client(Empty, 'delay')
         self._tmr = self.create_timer(5.0, self.timer_callback)
+
+        if not self._client.wait_for_service(timeout_sec = 1.0):
+            raise RuntimeError(f"Timeout waiting for service {self._client.service_name}.")
 
     def timer_callback(self):
         self.get_logger().info('Timer, calling delay 3s')
@@ -42,6 +46,9 @@ class AwaitClient(Node):
         self._client = self.create_client(Empty, 'delay', callback_group=self.cbgroup)
         # Other callbacks remain in the default callback group
         self._tmr = self.create_timer(5.0, self.timer_callback)
+
+        if not self._client.wait_for_service(timeout_sec = 1.0):
+            raise RuntimeError(f"Timeout waiting for service {self._client.service_name}.")
 
     async def timer_callback(self):
         """Timer callback can yield execution to other tasks because it is async."""
@@ -76,6 +83,9 @@ class FutureClient(Node):
         self._future = None
         self._state = State.DELAY
 
+        if not self._client.wait_for_service(timeout_sec = 1.0):
+            raise RuntimeError(f"Timeout waiting for service {self._client.service_name}.")
+
     def timer_callback(self):
         """Manage the state machine for the node."""
         if self._state == State.DELAY:
@@ -96,26 +106,31 @@ class FutureClient(Node):
 
 def deadlock_entry(args=None):
     """Entry point for the deadlock example."""
-    rclpy.init(args=args)
-    node = DeadlockClient()
-    node.get_logger().info('Deadlock Experiment!')
-    rclpy.spin(node)
-    rclpy.shutdown()
-
+    try:
+        with rclpy.init(args=args):
+            node = DeadlockClient()
+            node.get_logger().info('Deadlock Experiment!')
+            rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
 
 def await_entry(args=None):
     """Entry point for the await example."""
-    rclpy.init(args=args)
-    node = AwaitClient()
-    node.get_logger().info('Await Experiment!')
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        with rclpy.init(args=args):
+            node = AwaitClient()
+            node.get_logger().info('Await Experiment!')
+            rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
 
 
 def future_entry(args=None):
     """Entry point for the future example."""
-    rclpy.init(args=args)
-    node = FutureClient()
-    node.get_logger().info('Future Experiment!')
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        with rclpy.init(args=args):
+            node = FutureClient()
+            node.get_logger().info('Future Experiment!')
+            rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass

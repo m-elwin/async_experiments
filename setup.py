@@ -17,7 +17,11 @@ setup(
     maintainer_email='elwin@northwestern.edu',
     description='Experiments in python asynchronous services',
     license='MIT',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+            ],
+        },
     entry_points={
         'console_scripts': [
             'delay_server = async_experiments.delay_server:delay_entry',
